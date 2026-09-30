@@ -6,6 +6,8 @@ Familien-App für wiederkehrende Alltagsaufgaben. Der Grundsatz:
 
 Der **Hunde-Bereich** ist der Kern und vollständig ausgebaut. Kind, Haushalt und weitere Haustiere sind im Datenmodell und in der Erledigungslogik vorbereitet.
 
+**Live:** https://napfpost.netlify.app (Netlify-Projekt `napfpost`, baut bei jedem Push auf `main` automatisch neu)
+
 **Technik:** Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (PostgreSQL, Auth, Realtime, RLS) · Web Push (VAPID) · PWA · Hosting auf Netlify. Alles läuft in kostenlosen Tarifen.
 
 ---
