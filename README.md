@@ -51,6 +51,7 @@ Referenz war der Napfpost-Entwurf (Konzeptseite mit Live-Demo „Wer füttert he
 | `task_completions` | wer, wann, welcher Zeitraum, Quelle (`app`/`tag`) |
 | `task_tokens` | zufälliger Link für NFC/QR, widerrufbar |
 | `push_subscriptions` | Web-Push-Geräte je Nutzer |
+| `household_members.notify` | Push für diesen Haushalt an/aus (pro Person) |
 | `chips`, `chip_files` | NFC-Chips mit Code, Status, Ziel; Dateimetadaten (Migration `20260930000100_chips.sql`, siehe Abschnitt Chips) |
 
 **Haustier statt Hund (Begriffe).** In der Oberfläche heißt alles „Haustier“; beim Anlegen wählt man Hund oder Katze (Emoji 🐶/🐱, änderbar). Die Tabelle `dogs`, die Route `/hund`, die Spalte `dog_id` und der Bereich `tasks.area = 'dog'` heißen **aus Kompatibilitätsgründen historisch weiter so** (Chips, NFC-Links und Push-Links bleiben gültig). Die Art steht in `dogs.species`. Standardaufgaben je Art legt `create_dog` an (`src/lib/species.ts` spiegelt sie, `species.test.ts` prüft die Übereinstimmung): Hund = Füttern, Gassi, Frisches Wasser; Katze = Füttern, Frisches Wasser, Katzenklo (kein Gassi). Migration `20260930000200_haustier.sql`.
@@ -58,6 +59,23 @@ Referenz war der Napfpost-Entwurf (Konzeptseite mit Live-Demo „Wer füttert he
 Ein neuer Bereich (z. B. Kind) bekommt eine eigene Tabelle (`children`) und eine Spalte `tasks.child_id` nach dem Muster von `dog_id`. Erledigung, Zeitfenster, Push und NFC/QR funktionieren dann ohne Änderung.
 
 **Sicherheit:** RLS auf allen Tabellen; Nutzer sehen nur Daten ihrer Haushalte. Zusammengesetzte Fremdschlüssel (`(task_id, household_id)`) verhindern, dass Daten verschiedener Haushalte verknüpft werden. Erledigungen nur im eigenen Namen, nicht änderbar. Tokens: 128 Bit Zufall. `/t/:token` verrät ohne Anmeldung nichts und löst nur für Mitglieder auf. Der geheime Supabase-Schlüssel wird nur serverseitig für den Push-Versand genutzt.
+
+## Familienbereich
+
+Unter *Familie* (Migration `20260930000200_haustier.sql`, Regeln in `src/lib/household.ts` mit Tests). Jede Regel wird zusätzlich in der Datenbank erzwungen; die Oberfläche bietet nur Erlaubtes an.
+
+| Funktion | Wer | Umsetzung |
+| --- | --- | --- |
+| Haushalt umbenennen | Besitzer | RPC `rename_household` (`/familie/haushalt`) |
+| Eigenen Anzeigenamen ändern, eigene E-Mail sehen (nur lesen) | jedes Mitglied | `users`-Update (RLS: nur eigene Zeile) |
+| Mitglied entfernen, Besitzer ernennen/herabstufen, Besitz übertragen | Besitzer | RPC `remove_member`, `set_member_role`, `transfer_ownership` (`/familie/mitglieder`) |
+| Haushalt verlassen | jedes Mitglied | RPC `leave_household`; der letzte Besitzer muss zuerst übertragen, ist er allein, den Haushalt löschen |
+| Haushalt löschen | Besitzer, Namen eintippen | `POST /api/household/delete` → RPC `delete_household`; Kaskade auf Haustiere, Aufgaben, Erledigungen, Tokens, Chips |
+| Push pro Person und Haushalt an/aus | jedes Mitglied | `household_members.notify`, RPC `set_notify`; `notifyHousehold` überspringt Mitglieder mit „aus“ |
+| Einladungscode anzeigen, kopieren, erneuern | Erneuern: Besitzer | wie bisher (`rotate_invite_code`); der Code gilt bis zum Erneuern |
+| „Zuletzt erledigt“ | alle | letzte 10 Zeilen aus `task_completions` (nur Lesen) |
+
+Mitgliedschaften (`household_members`) lassen sich von Nutzern nicht mehr direkt ändern oder löschen (die frühere Löschen-Policy entfällt); alles läuft über die Funktionen mit Prüfung von `auth.uid()`. Gleichzeitiges Herabstufen zweier Besitzer wird über Zeilensperren abgefangen. **Haushalt löschen und Dateien:** Storage-Objekte lassen sich nicht per SQL löschen. Die Route liest die Pfade aus `delete_household` und entfernt die Dateien im Bucket `chip-files` mit dem Secret-Key über die Storage-API. Ohne gesetzten Secret-Key bleiben die Dateien als verwaiste Objekte im Bucket (die Datenbankzeilen sind trotzdem gelöscht). Ehemalige Mitglieder erscheinen in alten Erledigungen als „Jemand“.
 
 ## Chips (vorprogrammierte NFC-Chips)
 

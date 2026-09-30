@@ -1,5 +1,6 @@
 import "server-only";
 import webpush from "web-push";
+import { pushRecipients } from "./household";
 import { supabaseAdmin } from "./supabase/server";
 
 export type PushPayload = { title: string; body: string; url: string; tag?: string };
@@ -52,15 +53,15 @@ export async function sendToUsers(userIds: string[], payload: PushPayload) {
   return { sent, failed };
 }
 
-/** Alle Mitglieder des Haushalts außer der Person, die die Aufgabe erledigt hat. */
+/** Alle Mitglieder des Haushalts außer der Person, die die Aufgabe erledigt hat, und nur mit „Push an“ (household_members.notify). */
 export async function notifyHousehold(householdId: string, exceptUserId: string, payload: PushPayload) {
   const admin = supabaseAdmin();
   if (!admin) return { sent: 0, failed: 0, reason: "push-not-configured" as const };
   const { data, error } = await admin
     .from("household_members")
-    .select("user_id")
+    .select("user_id, notify")
     .eq("household_id", householdId)
     .neq("user_id", exceptUserId);
   if (error) throw error;
-  return sendToUsers((data ?? []).map((m) => m.user_id), payload);
+  return sendToUsers(pushRecipients(data ?? [], exceptUserId), payload);
 }
