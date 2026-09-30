@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button, Card, ErrorText, Field, Logo } from "@/components/ui";
@@ -75,6 +76,7 @@ export function LoginForm() {
             {mode === "up" && <Field id="name" name="name" label="Dein Name (so sieht ihn die Familie)" required maxLength={40} autoComplete="given-name" />}
             <Field id="email" name="email" label="E-Mail" type="email" required autoComplete="email" />
             <Field id="password" name="password" label="Passwort" type="password" required minLength={8} autoComplete={mode === "in" ? "current-password" : "new-password"} />
+            {mode === "in" && <Link href="/passwort-vergessen" className="justify-self-start text-sm font-semibold text-muted underline">Passwort vergessen?</Link>}
             <ErrorText>{error}</ErrorText>
             <Button disabled={busy} className="mt-1">{busy ? "Einen Moment …" : mode === "in" ? "Anmelden" : "Konto anlegen"}</Button>
           </form>
