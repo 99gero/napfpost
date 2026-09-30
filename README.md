@@ -51,10 +51,38 @@ Referenz war der Napfpost-Entwurf (Konzeptseite mit Live-Demo „Wer füttert he
 | `task_completions` | wer, wann, welcher Zeitraum, Quelle (`app`/`tag`) |
 | `task_tokens` | zufälliger Link für NFC/QR, widerrufbar |
 | `push_subscriptions` | Web-Push-Geräte je Nutzer |
+| `chips`, `chip_files` | NFC-Chips mit Code, Status, Ziel; Dateimetadaten (Migration `20260930000100_chips.sql`, siehe Abschnitt Chips) |
 
 Ein neuer Bereich (z. B. Kind) bekommt eine eigene Tabelle (`children`) und eine Spalte `tasks.child_id` nach dem Muster von `dog_id`. Erledigung, Zeitfenster, Push und NFC/QR funktionieren dann ohne Änderung.
 
 **Sicherheit:** RLS auf allen Tabellen; Nutzer sehen nur Daten ihrer Haushalte. Zusammengesetzte Fremdschlüssel (`(task_id, household_id)`) verhindern, dass Daten verschiedener Haushalte verknüpft werden. Erledigungen nur im eigenen Namen, nicht änderbar. Tokens: 128 Bit Zufall. `/t/:token` verrät ohne Anmeldung nichts und löst nur für Mitglieder auf. Der geheime Supabase-Schlüssel wird nur serverseitig für den Push-Versand genutzt.
+
+## Chips (vorprogrammierte NFC-Chips)
+
+Ein Chip trägt nur einen festen Link `https://<App-Domain>/c/<code>` (Code: 10 Zeichen, URL-sicher, 60 Bit kryptografischer Zufall). **Was der Chip tut, steht in der Datenbank** (`chips`) und ist in der App unter *Familie → Meine Chips* jederzeit änderbar. Der Chip wird nie neu beschrieben. Funktioniert auf Android und iPhone (iPhone nur Lesen), ohne Zusatz-App.
+
+**Ablauf**
+1. Betreiber: `node scripts/generate-chip-codes.mjs 100 --base-url https://app.meinedomain.de --batch 2026-10-a` erzeugt in `chip-codes/` eine CSV (`code,url,batch`, für die Chip-Schreib-Software) und ein SQL-INSERT (nur Codes, Status `frei`). Das Skript braucht keine Schlüssel. Das SQL im Supabase SQL Editor ausführen. `chip-codes/` steht in der `.gitignore`: Die Codes sind die Geheimnisse der Chips, nicht einchecken oder weitergeben.
+2. Die `url`-Spalte als URL-Datensatz auf die Chips schreiben, danach **sperren (Schreibschutz)**, damit niemand den Chip überschreiben kann.
+3. Kunde hält den Chip ans Handy → *Chip aktivieren* (Anmeldung, Haushalt, Zweck). Danach zeigt derselbe Chip immer, was in der App eingestellt ist.
+
+**Zwecke:** Aufgabe erledigen (wie der bisherige `/t/`-Link, über `complete.ts`), Notiz, Datei, Link, Notfallkarte (Kontaktseite). Sichtbarkeit: *nur Familie* (Anmeldung nötig) oder *öffentlich* (jeder mit dem Chip; Aufgaben immer nur für Angemeldete).
+
+**Ungültig, gesperrt oder fremd:** Es erscheint immer dieselbe neutrale Seite „Dieser Chip passt nicht“. Nicht angemeldet und *nur Familie* → Anmeldung, ohne etwas zu verraten. **Sperren/Ersetzen:** Chip verloren? In *Meine Chips* sperren, den neuen Chip aktivieren und dabei „Ersatz für einen gesperrten Chip“ wählen (übernimmt Name, Zweck, Datei).
+
+**Dateien:** Die Datei liegt in der App (privater Storage-Bucket `chip-files`), der Chip zeigt nur darauf. Web-Upload bis 5 MB (PDF, JPG, PNG, WebP, GIF, Text), höchstens 25 MB pro Haushalt, damit der Free-Tarif (1 GB Storage) reicht. Ausgeliefert wird über kurzlebige signierte Links.
+
+**Chip-Kapazitäten** (die URL braucht nur ca. 40 Byte):
+
+| Typ | Nutzbarer Speicher |
+| --- | --- |
+| NTAG213 | ca. 144 Byte |
+| NTAG215 | ca. 504 Byte |
+| NTAG216 | ca. 888 Byte |
+
+Deshalb steht auf dem Chip nur der kurze Link; Inhalte (auch Dateien) liegen in der App. NTAG213 reicht. **Sperren gegen Überschreiben empfohlen**, sonst kann jeder mit einer NFC-App den Link ersetzen.
+
+**Abwärtskompatibel:** `/t/<token>` und die bisherigen NFC/QR-Links der Aufgaben laufen unverändert weiter.
 
 ---
 
@@ -62,7 +90,7 @@ Ein neuer Bereich (z. B. Kind) bekommt eine eigene Tabelle (`children`) und eine
 
 ### 1. Supabase (Free)
 1. Auf supabase.com ein Projekt anlegen, Region z. B. Frankfurt.
-2. **SQL Editor** → Inhalt von `supabase/migrations/20260930000000_init.sql` einfügen und ausführen.
+2. **SQL Editor** → Inhalt von `supabase/migrations/20260930000000_init.sql` einfügen und ausführen, danach `20260930000100_chips.sql` (Chip-System).
    (Alternativ mit der CLI: `npx supabase link` und `npx supabase db push`.)
 3. **Authentication → Sign In / Providers → Email**: „Confirm email“ **ausschalten**. Der kostenlose Supabase-Mailversand schafft nur wenige Mails pro Stunde. Für eine Familie reicht die Anmeldung mit E-Mail und Passwort.
 4. **Authentication → URL Configuration**: Site URL = eure Netlify-Adresse (später die eigene Domain).
@@ -106,7 +134,7 @@ npm run dev
 
 | Befehl | Prüft |
 | --- | --- |
-| `npm test` | Zeitfenster-Logik (Vitest) |
+| `npm test` | Zeitfenster-Logik, Chip-Codes und Chip-Zugriff (Vitest) |
 | `npm run typecheck`, `npm run lint` | TypeScript, ESLint |
 | `supabase/tests/rls_test.sql` | RLS-Szenario Jolina/Gero/Fremder gegen PostgreSQL (mit `supabase/tests/stub.sql` auch ohne Supabase) |
 | `npm run e2e` | **Zwei-Handy-Test** gegen die laufende App und lokales Supabase: Jolina füttert → Geros offene App aktualisiert sich live, Gero bekommt Push, Gero scannt den Chip und sieht „bereits gefüttert · Jolina · Uhrzeit“, kein zweiter Eintrag; umgekehrt bekommt Jolina „🐶 Bruno wurde gefüttert / Gero · 09:17 Uhr“; gleichzeitiges Antippen ergibt genau einen Eintrag; ein fremder Haushalt sieht nichts. Die Push-Nachrichten werden dabei von einem lokalen Push-Dienst empfangen und entschlüsselt. |

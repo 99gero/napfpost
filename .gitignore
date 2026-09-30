@@ -42,3 +42,6 @@ next-env.d.ts
 .e2e-shots/
 supabase/.temp/
 !.env.example
+
+# Chip-Codes (geheim, siehe scripts/generate-chip-codes.mjs)
+/chip-codes/
