@@ -2,7 +2,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { Dog, Household, Member } from "@/lib/types";
 
-type Ctx = { userId: string; myName: string; household: Household; members: Member[]; dogs: Dog[] };
+type Ctx = { userId: string; myEmail: string; myName: string; household: Household; members: Member[]; dogs: Dog[] };
 const HouseholdContext = createContext<Ctx | null>(null);
 
 export function HouseholdProvider({ value, children }: { value: Ctx; children: ReactNode }) {

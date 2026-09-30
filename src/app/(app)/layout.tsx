@@ -21,18 +21,19 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const household = membership.households;
 
   const [{ data: memberRows }, { data: dogs }] = await Promise.all([
-    sb.from("household_members").select("user_id, role, users(display_name)").eq("household_id", household.id).order("joined_at"),
+    sb.from("household_members").select("user_id, role, notify, users(display_name)").eq("household_id", household.id).order("joined_at"),
     sb.from("dogs").select("*").eq("household_id", household.id).order("sort").order("created_at"),
   ]);
-  const members: Member[] = (memberRows ?? []).map((m: { user_id: string; role: "owner" | "member"; users: { display_name: string } | { display_name: string }[] | null }) => ({
+  const members: Member[] = (memberRows ?? []).map((m: { user_id: string; role: "owner" | "member"; notify: boolean; users: { display_name: string } | { display_name: string }[] | null }) => ({
     user_id: m.user_id,
     role: m.role,
+    notify: m.notify,
     display_name: (Array.isArray(m.users) ? m.users[0] : m.users)?.display_name ?? "Jemand",
   }));
   const myName = members.find((m) => m.user_id === user.id)?.display_name ?? "Ich";
 
   return (
-    <HouseholdProvider value={{ userId: user.id, myName, household, members, dogs: (dogs ?? []) as Dog[] }}>
+    <HouseholdProvider value={{ userId: user.id, myEmail: user.email ?? "", myName, household, members, dogs: (dogs ?? []) as Dog[] }}>
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] pt-[calc(env(safe-area-inset-top,0px)+16px)]">
         <PasswordChangedNotice />
         {children}

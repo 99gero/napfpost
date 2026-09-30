@@ -20,7 +20,7 @@ export function DogScreen({ dogId }: { dogId: string }) {
   const [busyTask, setBusyTask] = useState<string | null>(null);
   const tz = household.timezone;
 
-  if (!dog) return <ErrorText>Diesen Hund gibt es in eurem Haushalt nicht.</ErrorText>;
+  if (!dog) return <ErrorText>Dieses Haustier gibt es in eurem Haushalt nicht.</ErrorText>;
 
   const primary = tasks?.find((t) => t.kind === "feed") ?? tasks?.[0];
 
@@ -32,7 +32,7 @@ export function DogScreen({ dogId }: { dogId: string }) {
   return (
     <main className="grid gap-5">
       <header className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Hund auswählen">
+        <div className="flex min-w-0 gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Haustier auswählen">
           {dogs.map((d) => (
             <Link
               key={d.id}
@@ -44,9 +44,9 @@ export function DogScreen({ dogId }: { dogId: string }) {
               {d.emoji} {d.name}
             </Link>
           ))}
-          <Link href="/hund/neu" aria-label="Hund hinzufügen" className="shrink-0 rounded-full border-[1.5px] border-dashed border-line px-4 py-2.5 font-semibold text-muted">+</Link>
+          <Link href="/hund/neu" aria-label="Haustier hinzufügen" className="shrink-0 rounded-full border-[1.5px] border-dashed border-line px-4 py-2.5 font-semibold text-muted">+</Link>
         </div>
-        <Link href={`/hund/${dogId}/einstellungen`} aria-label="Einstellungen für diesen Hund" className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-card text-lg">⚙︎</Link>
+        <Link href={`/hund/${dogId}/einstellungen`} aria-label="Einstellungen für dieses Haustier" className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-card text-lg">⚙︎</Link>
       </header>
 
       <ErrorText>{error}</ErrorText>

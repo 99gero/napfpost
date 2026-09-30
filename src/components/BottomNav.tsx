@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
-  { href: "/hund", label: "Hund", icon: "🐶" },
+  { href: "/hund", label: "Haustier", icon: "🐾" },
   { href: "/familie", label: "Familie", icon: "👨‍👩‍👧" },
 ];
 

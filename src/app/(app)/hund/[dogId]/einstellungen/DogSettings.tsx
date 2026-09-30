@@ -3,10 +3,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useHousehold } from "@/components/HouseholdProvider";
+import { SpeciesPicker } from "@/components/SpeciesPicker";
 import { TagPanel } from "@/components/TagPanel";
 import { Button, Card, ErrorText, Field } from "@/components/ui";
+import { emojiForSpecies, speciesOf, type Species } from "@/lib/species";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import type { Schedule, Task } from "@/lib/types";
+import type { Dog, Schedule, Task } from "@/lib/types";
 
 const DAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const hhmm = (t: string) => t.slice(0, 5);
@@ -32,7 +34,7 @@ export function DogSettings({ dogId }: { dogId: string }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Daten beim Öffnen laden
   useEffect(() => { load(); }, [load]);
 
-  if (!dog) return <ErrorText>Diesen Hund gibt es nicht.</ErrorText>;
+  if (!dog) return <ErrorText>Dieses Haustier gibt es nicht.</ErrorText>;
   const sb = supabaseBrowser();
 
   async function run(p: PromiseLike<{ error: { message: string } | null }>) {
@@ -41,10 +43,10 @@ export function DogSettings({ dogId }: { dogId: string }) {
     else { setError(""); load(); }
   }
 
-  async function saveDog(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const { error } = await sb.from("dogs").update({ name: String(new FormData(e.currentTarget).get("dogname")).trim() }).eq("id", dogId);
+  async function saveDog(patch: { name: string; species: Species; emoji: string }) {
+    const { error } = await sb.from("dogs").update(patch).eq("id", dogId);
     if (error) return setError(error.message);
+    setError("");
     router.refresh();
   }
 
@@ -74,10 +76,7 @@ export function DogSettings({ dogId }: { dogId: string }) {
       <ErrorText>{error}</ErrorText>
 
       <Card>
-        <form onSubmit={saveDog} className="flex items-end gap-2">
-          <div className="min-w-0 flex-1"><Field id="dogname" name="dogname" label="Name" defaultValue={dog.name} required maxLength={40} /></div>
-          <Button>Speichern</Button>
-        </form>
+        <PetForm key={`${dog.id}-${dog.species}-${dog.emoji}-${dog.name}`} dog={dog} onSave={saveDog} />
       </Card>
 
       {tasks?.map((t) => (
@@ -174,5 +173,26 @@ function ScheduleRow({ s, onSave, onDelete }: { s: Schedule; onSave: (p: Partial
       </div>
       {invalid && <p className="text-xs text-warn">Das Ende muss nach dem Beginn liegen, und mindestens ein Tag muss gewählt sein.</p>}
     </div>
+  );
+}
+
+function PetForm({ dog, onSave }: { dog: Dog; onSave: (p: { name: string; species: Species; emoji: string }) => void }) {
+  const [species, setSpecies] = useState<Species>(speciesOf(dog.species));
+  const [emoji, setEmoji] = useState(dog.emoji);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSave({ name: String(new FormData(e.currentTarget).get("dogname")).trim(), species, emoji });
+      }}
+      className="grid gap-3"
+    >
+      <SpeciesPicker species={species} emoji={emoji} onSpecies={(s) => { setSpecies(s); setEmoji((cur) => emojiForSpecies(cur, s)); }} onEmoji={setEmoji} />
+      <div className="flex items-end gap-2">
+        <div className="min-w-0 flex-1"><Field id="dogname" name="dogname" label="Name" defaultValue={dog.name} required maxLength={40} /></div>
+        <Button>Speichern</Button>
+      </div>
+      <p className="text-xs text-muted">Die Art ändert nur Symbol und Anzeige. Bereits angelegte Aufgaben bleiben, wie sie sind.</p>
+    </form>
   );
 }

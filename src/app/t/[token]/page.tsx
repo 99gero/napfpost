@@ -4,7 +4,7 @@ import { Logo } from "@/components/ui";
 import { supabaseServer } from "@/lib/supabase/server";
 
 // Öffentlicher Link auf NFC-Tag und QR-Code. Ohne Anmeldung verrät er nichts:
-// weder Hund noch Haushalt noch Aufgabe. Aufgelöst wird nur für Mitglieder (RLS).
+// weder Haustier noch Haushalt noch Aufgabe. Aufgelöst wird nur für Mitglieder (RLS).
 export default async function TokenPage(props: PageProps<"/t/[token]">) {
   const { token } = await props.params;
   const sb = await supabaseServer();
@@ -21,7 +21,7 @@ export default async function TokenPage(props: PageProps<"/t/[token]">) {
       <Logo />
       <h1 className="font-display text-3xl leading-none">Dieser Chip passt nicht</h1>
       <p className="text-muted">
-        Der Code ist ungültig, wurde ersetzt oder gehört zu einem anderen Haushalt. Wenn es euer Chip ist: In den Einstellungen des Hundes könnt ihr einen neuen Link erzeugen und auf den Chip schreiben.
+        Der Code ist ungültig, wurde ersetzt oder gehört zu einem anderen Haushalt. Wenn es euer Chip ist: In den Einstellungen des Haustiers könnt ihr einen neuen Link erzeugen und auf den Chip schreiben.
       </p>
       <Link href="/" className="justify-self-start rounded-full bg-ink px-5 py-3 font-extrabold text-on-ink">Zur App</Link>
     </main>

@@ -4,7 +4,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Completion, Task } from "@/lib/types";
 
 /**
- * Aufgaben (eines Hundes oder eine einzelne) samt Erledigungen der letzten 7 Tage.
+ * Aufgaben (eines Haustiers oder eine einzelne) samt Erledigungen der letzten 7 Tage.
  * Aktualisiert sich live über Supabase Realtime und beim Zurückkehren in die App.
  */
 export function useTasks(householdId: string, filter: { dogId?: string; taskId?: string }) {

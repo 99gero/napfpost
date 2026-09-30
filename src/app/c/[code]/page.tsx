@@ -10,7 +10,7 @@ import { ActivateForm, type BlockedChip } from "./ActivateForm";
 export const metadata: Metadata = { robots: { index: false, follow: false }, referrer: "no-referrer" };
 
 // Fester Link auf dem NFC-Chip: /c/<code>. Der Chip bleibt unverändert; was er tut, steht in der Datenbank.
-// Ohne Berechtigung verrät die Seite nichts über Haushalt, Hund oder Inhalt.
+// Ohne Berechtigung verrät die Seite nichts über Haushalt, Haustier oder Inhalt.
 export default async function ChipPage(props: PageProps<"/c/[code]">) {
   const { code } = await props.params;
   if (!isValidCode(code)) return <ChipNoMatch />;
