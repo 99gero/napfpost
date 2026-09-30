@@ -20,8 +20,9 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  // /passwort-neu prüft den Link aus der E-Mail selbst (die Sitzung entsteht erst im Browser).
   // /t/… und /c/… prüfen selbst und leiten mit Rücksprung zur Anmeldung weiter
-  const isPublic = path === "/login" || path.startsWith("/t/") || path.startsWith("/c/") || path.startsWith("/api/");
+  const isPublic = path === "/login" || path === "/passwort-vergessen" || path === "/passwort-neu" || path.startsWith("/t/") || path.startsWith("/c/") || path.startsWith("/api/");
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

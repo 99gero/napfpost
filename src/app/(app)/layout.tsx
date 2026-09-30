@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/BottomNav";
+import { PasswordChangedNotice } from "@/components/PasswordChangedNotice";
 import { HouseholdProvider } from "@/components/HouseholdProvider";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { Dog, Household, Member } from "@/lib/types";
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <HouseholdProvider value={{ userId: user.id, myName, household, members, dogs: (dogs ?? []) as Dog[] }}>
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+96px)] pt-[calc(env(safe-area-inset-top,0px)+16px)]">
+        <PasswordChangedNotice />
         {children}
       </div>
       <BottomNav />
