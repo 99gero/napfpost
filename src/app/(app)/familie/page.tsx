@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useHousehold } from "@/components/HouseholdProvider";
@@ -64,6 +65,12 @@ export default function FamilyPage() {
         <h2 className="font-display text-xl">Benachrichtigungen</h2>
         <p className="text-sm text-muted">Wenn jemand anderes eine Aufgabe erledigt, bekommst du eine Nachricht. Deine eigenen Erledigungen melden wir dir nicht.</p>
         <PushSetup />
+      </Card>
+
+      <Card className="grid gap-3">
+        <h2 className="font-display text-xl">NFC-Chips</h2>
+        <p className="text-sm text-muted">Was ein Chip beim Antippen tut, änderst du hier – der Chip selbst bleibt unverändert.</p>
+        <Link href="/familie/chips" className="justify-self-start rounded-full border-2 border-ink px-5 py-3 font-extrabold">Meine Chips</Link>
       </Card>
 
       <Card className="grid gap-3">
