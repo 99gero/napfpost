@@ -86,6 +86,19 @@ Deshalb steht auf dem Chip nur der kurze Link; Inhalte (auch Dateien) liegen in 
 
 ---
 
+## Passwort zurücksetzen
+
+Auf der Anmeldeseite führt „Passwort vergessen?“ zu `/passwort-vergessen`. Dort gibt man die E-Mail-Adresse ein; die App zeigt immer dieselbe Bestätigung („Wenn es ein Konto mit dieser Adresse gibt, haben wir eine E-Mail geschickt.“), damit nicht erkennbar ist, ob eine Adresse registriert ist. Der Link in der E-Mail öffnet `/passwort-neu`. Der Browser-Client (`@supabase/ssr`, PKCE) löst den `?code=` selbst ein; danach vergibt man ein neues Passwort (mindestens 8 Zeichen, Wiederholung muss passen) und landet angemeldet auf der Startseite. Ungültige oder abgelaufene Links führen zurück zu „Passwort vergessen“. Die Prüflogik steht in `src/lib/password.ts` (mit Tests).
+
+**Nötige Supabase-Einstellungen**
+1. **Authentication → URL Configuration → Redirect URLs**: `https://napfpost.netlify.app/passwort-neu` eintragen (oder allgemeiner `https://napfpost.netlify.app/**`). Bei einer eigenen Domain zusätzlich `https://app.meinedomain.de/passwort-neu`. Für lokale Tests `http://localhost:3000/passwort-neu`. Ohne diesen Eintrag ignoriert Supabase den Rücksprung und schickt auf die Site URL.
+2. **Authentication → Email Templates → Reset Password**: Die Vorlage muss den Link `{{ .ConfirmationURL }}` enthalten (Standard). Nicht auf `{{ .SiteURL }}` oder eigene Adressen umbauen.
+3. Der Link muss im selben Browser geöffnet werden, in dem er angefordert wurde (PKCE); auf einem anderen Gerät zeigt die App „Link ungültig“, dann einfach neu anfordern.
+
+**Wichtig: E-Mail-Versand.** Der eingebaute kostenlose Mailversand von Supabase ist stark begrenzt (nur wenige Mails pro Stunde) und darf laut Supabase-Standard nur an Adressen von Mitgliedern der Supabase-Organisation senden. Für echte Kunden braucht es einen eigenen SMTP-Anbieter (**Authentication → Emails → SMTP Settings**); kostenlose Tarife existieren, meist mit eigener Domain. Bis dahin funktioniert das Zurücksetzen nur für Team-Adressen und mit Ratenlimit (die App zeigt dann eine freundliche Meldung).
+
+---
+
 ## Einrichtung (alles kostenlos)
 
 ### 1. Supabase (Free)
@@ -134,7 +147,7 @@ npm run dev
 
 | Befehl | Prüft |
 | --- | --- |
-| `npm test` | Zeitfenster-Logik, Chip-Codes und Chip-Zugriff (Vitest) |
+| `npm test` | Zeitfenster-Logik, Chip-Codes, Chip-Zugriff und Passwort-Prüfung (Vitest) |
 | `npm run typecheck`, `npm run lint` | TypeScript, ESLint |
 | `supabase/tests/rls_test.sql` | RLS-Szenario Jolina/Gero/Fremder gegen PostgreSQL (mit `supabase/tests/stub.sql` auch ohne Supabase) |
 | `npm run e2e` | **Zwei-Handy-Test** gegen die laufende App und lokales Supabase: Jolina füttert → Geros offene App aktualisiert sich live, Gero bekommt Push, Gero scannt den Chip und sieht „bereits gefüttert · Jolina · Uhrzeit“, kein zweiter Eintrag; umgekehrt bekommt Jolina „🐶 Bruno wurde gefüttert / Gero · 09:17 Uhr“; gleichzeitiges Antippen ergibt genau einen Eintrag; ein fremder Haushalt sieht nichts. Die Push-Nachrichten werden dabei von einem lokalen Push-Dienst empfangen und entschlüsselt. |
