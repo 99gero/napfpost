@@ -1,0 +1,14 @@
+# Netlify erkennt Next.js automatisch (OpenNext-Adapter); API-Routen laufen als Netlify Functions.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Der Service Worker darf nie aus dem Cache kommen, sonst bleiben Geräte auf alten Versionen hängen
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"

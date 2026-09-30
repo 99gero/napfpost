@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Napfpost – offline</title>
+<style>
+  :root { --tile: #e6ecea; --ink: #1c2833; --muted: #56636d; }
+  @media (prefers-color-scheme: dark) { :root { --tile: #141b21; --ink: #e8eeec; --muted: #9aa7ae; } }
+  body { margin: 0; min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 24px; background: var(--tile); color: var(--ink); font: 17px/1.5 system-ui, sans-serif; }
+  h1 { margin: 0; font: 900 1.8rem/1.1 "Arial Black", system-ui, sans-serif; }
+  p { margin: 0; color: var(--muted); max-width: 32ch; }
+  button { justify-self: start; font: inherit; font-weight: 800; padding: 12px 20px; border-radius: 999px; border: 0; background: var(--ink); color: var(--tile); }
+</style>
+</head>
+<body>
+  <h1>Gerade kein Netz</h1>
+  <p>Ob Bruno schon gefüttert wurde, lässt sich nur mit Internet prüfen. Sobald du wieder online bist, geht es weiter.</p>
+  <button onclick="location.reload()">Erneut versuchen</button>
+</body>
+</html>

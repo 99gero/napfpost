@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Der Zwei-Handy-Test ist ein einfaches Node-Skript (CommonJS)
+  { files: ["e2e/**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
 ]);
 
 export default eslintConfig;
