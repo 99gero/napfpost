@@ -1,11 +1,13 @@
 import type { Completion, Schedule } from "./schedule";
+import type { Species } from "./species";
 
 export type Area = "dog" | "child" | "household" | "pet";
 export type TaskKind = "feed" | "walk" | "water" | "meds" | "custom";
 
 export type Household = { id: string; name: string; timezone: string; invite_code: string };
 export type Member = { user_id: string; role: "owner" | "member"; display_name: string };
-export type Dog = { id: string; household_id: string; name: string; emoji: string; sort: number };
+// Haustier (Hund oder Katze). Der Typname und die Tabelle `dogs` heißen historisch so.
+export type Dog = { id: string; household_id: string; name: string; emoji: string; species: Species; sort: number };
 
 export type Task = {
   id: string;

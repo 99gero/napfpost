@@ -22,5 +22,5 @@ export function formatDay(iso: string | Date, timeZone: string) {
   return new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "short", timeZone }).format(new Date(iso));
 }
 
-/** Emoji für die Push-Überschrift: beim Hund immer 🐶 (bzw. das Emoji des Hundes). */
+/** Emoji für die Push-Überschrift: das Emoji des Haustiers (🐶, 🐱 …), sonst das der Aufgabe. */
 export const pushTitle = (subjectEmoji: string, subject: string, t: T) => `${subjectEmoji} ${doneSentence(subject, t)}`;

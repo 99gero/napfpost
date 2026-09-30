@@ -9,7 +9,7 @@ const hints: Record<Exclude<PushState, "on" | "off">, string> = {
   denied: "Benachrichtigungen sind für Napfpost blockiert. Du kannst sie in den Einstellungen des Browsers bzw. des iPhones wieder erlauben.",
 };
 
-/** compact = Hinweis-Banner im Hunde-Bereich (nur wenn Push noch aus ist) */
+/** compact = Hinweis-Banner im Haustier-Bereich (nur wenn Push noch aus ist) */
 export function PushSetup({ compact }: { compact?: boolean }) {
   const [state, setState] = useState<PushState | null>(null);
   const [busy, setBusy] = useState(false);
@@ -38,7 +38,7 @@ export function PushSetup({ compact }: { compact?: boolean }) {
   if (compact)
     return (
       <div className="grid gap-3 rounded-[22px] border border-kibble/40 bg-kibble/10 p-4">
-        <p className="text-[0.95rem]"><b>Nichts verpassen:</b> Erhalte eine Nachricht, sobald jemand aus der Familie füttert.</p>
+        <p className="text-[0.95rem]"><b>Nichts verpassen:</b> Erhalte eine Nachricht, sobald jemand aus der Familie das Haustier versorgt.</p>
         {state === "off" ? (
           <Button onClick={() => run(enablePush)} disabled={busy} className="justify-self-start">Benachrichtigungen aktivieren</Button>
         ) : (

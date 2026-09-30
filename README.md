@@ -4,7 +4,7 @@ Familien-App für wiederkehrende Alltagsaufgaben. Der Grundsatz:
 
 > Eine Person macht eine einfache physische oder digitale Aktion → die App erkennt sie → der Status wird aktualisiert → die Familie wird automatisch informiert.
 
-Der **Hunde-Bereich** ist der Kern und vollständig ausgebaut. Kind, Haushalt und weitere Haustiere sind im Datenmodell und in der Erledigungslogik vorbereitet.
+Der **Haustier-Bereich** (Hund oder Katze) ist der Kern und vollständig ausgebaut. Kind, Haushalt und weitere Tiere sind im Datenmodell und in der Erledigungslogik vorbereitet.
 
 **Live:** https://napfpost.netlify.app (Netlify-Projekt `napfpost`, baut bei jedem Push auf `main` automatisch neu)
 
@@ -33,7 +33,7 @@ Referenz war der Napfpost-Entwurf (Konzeptseite mit Live-Demo „Wer füttert he
 - **„Bereits erledigt“** zuerst: Jede Aufgabenansicht zeigt zuerst den Status des aktuellen Zeitraums. Erst wenn noch niemand erledigt hat, gibt es den Knopf.
 - **Zeitfenster** (`src/lib/schedule.ts`, mit Tests): Die Fenster teilen den Tag lückenlos auf, die Grenze liegt in der Mitte der Lücke. Bei Morgens 07–10 und Abends 17–21 zählt 00:00–13:30 zu „Morgens“, 13:30–24:00 zu „Abends“. Wer um 06:40 füttert, hat die Morgenfütterung erledigt. Nach dem Fensterende ohne Eintrag erscheint „⚠️ Noch nicht erledigt“. Aufgaben ohne Fenster gelten einmal pro Tag. Gerechnet wird in der Zeitzone des Haushalts (Standard Europe/Berlin).
 - **Kein doppelter Eintrag:** `task_completions` hat `unique (task_id, period_key)`. Tippen zwei Personen gleichzeitig, bekommt die zweite „bereits erledigt“ mit dem Namen der ersten.
-- **Push:** Nach einer neuen Erledigung bekommen alle *anderen* Mitglieder des Haushalts „🐶 Bruno wurde gefüttert – Gero · 09:17 Uhr“. Die Person selbst bekommt nichts.
+- **Push:** Nach einer neuen Erledigung bekommen alle *anderen* Mitglieder des Haushalts „🐶 Bruno wurde gefüttert – Gero · 09:17 Uhr“ (das Emoji kommt aus dem Haustier, bei einer Katze z. B. „🐱 Minka wurde gefüttert“). Die Person selbst bekommt nichts.
 - **Live:** Offene Apps aktualisieren sich über Supabase Realtime sofort, außerdem beim Zurückkehren in die App.
 - **Rückgängig:** Die eigene Erledigung lässt sich 15 Minuten lang zurücknehmen (versehentlich getippt).
 
@@ -45,13 +45,15 @@ Referenz war der Napfpost-Entwurf (Konzeptseite mit Live-Demo „Wer füttert he
 | --- | --- |
 | `users` | Profil zu `auth.users` (Anzeigename) |
 | `households`, `household_members` | Haushalt, Einladungscode, Rollen owner/member |
-| `dogs` | Hunde eines Haushalts |
-| `tasks` | Aufgabe mit `area` (`dog`, `child`, `household`, `pet`), bei Hunden `dog_id`; Satzbausteine für Nachrichten („wurde“ + „gefüttert“) |
+| `dogs` | Haustiere eines Haushalts (Hund oder Katze, Spalte `species` = `dog`/`cat`, Standard `dog`) |
+| `tasks` | Aufgabe mit `area` (`dog`, `child`, `household`, `pet`), bei Haustieren `dog_id`; Satzbausteine für Nachrichten („wurde“ + „gefüttert“) |
 | `task_schedules` | Zeitfenster mit Wochentagen |
 | `task_completions` | wer, wann, welcher Zeitraum, Quelle (`app`/`tag`) |
 | `task_tokens` | zufälliger Link für NFC/QR, widerrufbar |
 | `push_subscriptions` | Web-Push-Geräte je Nutzer |
 | `chips`, `chip_files` | NFC-Chips mit Code, Status, Ziel; Dateimetadaten (Migration `20260930000100_chips.sql`, siehe Abschnitt Chips) |
+
+**Haustier statt Hund (Begriffe).** In der Oberfläche heißt alles „Haustier“; beim Anlegen wählt man Hund oder Katze (Emoji 🐶/🐱, änderbar). Die Tabelle `dogs`, die Route `/hund`, die Spalte `dog_id` und der Bereich `tasks.area = 'dog'` heißen **aus Kompatibilitätsgründen historisch weiter so** (Chips, NFC-Links und Push-Links bleiben gültig). Die Art steht in `dogs.species`. Standardaufgaben je Art legt `create_dog` an (`src/lib/species.ts` spiegelt sie, `species.test.ts` prüft die Übereinstimmung): Hund = Füttern, Gassi, Frisches Wasser; Katze = Füttern, Frisches Wasser, Katzenklo (kein Gassi). Migration `20260930000200_haustier.sql`.
 
 Ein neuer Bereich (z. B. Kind) bekommt eine eigene Tabelle (`children`) und eine Spalte `tasks.child_id` nach dem Muster von `dog_id`. Erledigung, Zeitfenster, Push und NFC/QR funktionieren dann ohne Änderung.
 
@@ -90,7 +92,7 @@ Deshalb steht auf dem Chip nur der kurze Link; Inhalte (auch Dateien) liegen in 
 
 ### 1. Supabase (Free)
 1. Auf supabase.com ein Projekt anlegen, Region z. B. Frankfurt.
-2. **SQL Editor** → Inhalt von `supabase/migrations/20260930000000_init.sql` einfügen und ausführen, danach `20260930000100_chips.sql` (Chip-System).
+2. **SQL Editor** → Inhalt von `supabase/migrations/20260930000000_init.sql` einfügen und ausführen, danach `20260930000100_chips.sql` (Chip-System), danach `20260930000200_haustier.sql` (Haustier-Art und Familienbereich).
    (Alternativ mit der CLI: `npx supabase link` und `npx supabase db push`.)
 3. **Authentication → Sign In / Providers → Email**: „Confirm email“ **ausschalten**. Der kostenlose Supabase-Mailversand schafft nur wenige Mails pro Stunde. Für eine Familie reicht die Anmeldung mit E-Mail und Passwort.
 4. **Authentication → URL Configuration**: Site URL = eure Netlify-Adresse (später die eigene Domain).
@@ -119,7 +121,7 @@ npx web-push generate-vapid-keys
 - **Android (Chrome):** Seite öffnen → „Zum Startbildschirm hinzufügen“ → in der App unter *Familie* Benachrichtigungen aktivieren.
 - **iPhone (ab iOS 16.4):** In Safari öffnen → Teilen → „Zum Home-Bildschirm“ → **die App vom Home-Bildschirm öffnen**, anmelden, Benachrichtigungen aktivieren. Push gibt es auf dem iPhone nur in der installierten App.
 - **NFC auf dem iPhone:** Ein NFC-Scan öffnet den Link in Safari, nicht in der installierten App. Deshalb einmal zusätzlich in Safari anmelden, danach bleibt die Anmeldung erhalten.
-- **Chip beschreiben:** Unter *Hund → ⚙︎ → NFC-Chip & QR-Code* den Link erzeugen. Auf Android-Chrome direkt „Auf Chip schreiben“; auf dem iPhone mit einer NFC-App (z. B. „NFC Tools“) als URL-Datensatz schreiben. Geeignet sind NTAG213-Chips. Derselbe Link steht als QR-Code zum Ausdrucken bereit.
+- **Chip beschreiben:** Unter *Haustier → ⚙︎ → NFC-Chip & QR-Code* den Link erzeugen. Auf Android-Chrome direkt „Auf Chip schreiben“; auf dem iPhone mit einer NFC-App (z. B. „NFC Tools“) als URL-Datensatz schreiben. Geeignet sind NTAG213-Chips. Derselbe Link steht als QR-Code zum Ausdrucken bereit.
 
 ---
 
