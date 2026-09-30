@@ -5,6 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Turbopack legt Umgebungswerte in seinem Build-Cache ab. Der Cache wird nicht veröffentlicht,
+  # löst aber Netlifys Geheimnis-Scan aus. Nur diesen Ordner auslassen; alles Veröffentlichte wird weiter geprüft.
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache/**"
 
 # Der Service Worker darf nie aus dem Cache kommen, sonst bleiben Geräte auf alten Versionen hängen
 [[headers]]
